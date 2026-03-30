@@ -10,11 +10,6 @@ on:
 jobs:
   setup-and-run:
     runs-on: ubuntu-latest
-    # We are forcing the credentials into the environment for the entire job
-    env:
-      CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
-      CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
-      CRAVE_HOST: foss.crave.io
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,30 +20,24 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-          # 2. Setup Credentials in TWO places to be safe
-          mkdir -p ~/.config/crave
-          cat <<EOF > ~/.config/crave/crave.conf
-          {
-            "crave_username": "$CRAVE_USERNAME",
-            "crave_token": "$CRAVE_TOKEN",
-            "crave_host": "https://foss.crave.io"
-          }
-          EOF
-          cp ~/.config/crave/crave.conf ~/crave.conf
+          # 2. Official API Configuration
+          # We use the direct API host for FOSS to avoid the 301 redirect loop
+          crave config set host foss.crave.io
+          crave config set username "${{ secrets.CRAVE_USERNAME }}"
+          crave config set token "${{ secrets.CRAVE_TOKEN }}"
 
-          # 3. Create crave.yaml mapping
-          # We'll try the project name exactly as it appears on your dashboard
+          # 3. Create the mapping file
+          # Locked to your active dashboard project
           cat <<EOF > crave.yaml
           project: "LOS 22.1"
           EOF
 
-          # 4. VERIFICATION: Test the connection before we try to run
-          echo "Testing API connection..."
-          crave list projects || echo "LIST FAILED: Check your CRAVE_TOKEN in GitHub Secrets!"
+          # 4. Verification
+          echo "Testing API handshake..."
+          crave list projects || echo "Handshake failed. Double-check your CRAVE_TOKEN!"
 
           # 5. Fire the runner setup
-          # We use the -p flag to force the project name one more time
-          crave run -p "LOS 22.1" --no-patch -- " \
+          crave run --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
