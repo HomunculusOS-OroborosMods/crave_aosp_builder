@@ -8,35 +8,41 @@ on:
         required: true
 
 jobs:
-  run-as-job:
+  setup-and-run:
     runs-on: ubuntu-latest
-    # We set these at the job level so every step sees them automatically
-    env:
-      CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
-      CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
-      CRAVE_HOST: https://foss.crave.io
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install and Test Crave
+      - name: Full Runner Setup
         run: |
-          # 1. Install tool
+          # 1. Install Crave
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
-          
-          # 2. Check if the tool recognizes your account via environment variables
-          echo "Testing connection to FOSS..."
+
+          # 2. Setup Credentials in the official folder
+          mkdir -p ~/.config/crave
+          cat <<EOF > ~/.config/crave/crave.conf
+          {
+            "crave_username": "${{ secrets.CRAVE_USERNAME }}",
+            "crave_token": "${{ secrets.CRAVE_TOKEN }}",
+            "crave_host": "https://foss.crave.io"
+          }
+          EOF
+          # Backup location just in case
+          cp ~/.config/crave/crave.conf ~/crave.conf
+
+          # 3. Create crave.yaml mapping IMMEDIATELY
+          # This tells Crave to stop looking at your URL and just use the LOS 22.1 room
+          cat <<EOF > crave.yaml
+          project: "LOS 22.1"
+          EOF
+
+          # 4. Diagnostic: Check if it sees your projects now
+          echo "Verifying project access..."
           crave list projects
 
-      - name: Start Runner via LOS 22.1
-        run: |
-          # 3. Create the mapping file specifically for your active dashboard project
-          cat <<EOF > crave.yaml
-          project: LOS 22.1
-          EOF
-          
-          # 4. Fire the runner
+          # 5. Fire the runner setup
           crave run --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
