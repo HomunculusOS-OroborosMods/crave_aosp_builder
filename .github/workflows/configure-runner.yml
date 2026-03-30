@@ -14,6 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # We are putting the credentials exactly where Crave asked for them
       - name: Setup Credentials
         run: |
           cat <<EOF > ~/crave.conf
@@ -23,17 +24,18 @@ jobs:
           }
           EOF
           
+          # MATCHING YOUR DASHBOARD: Switching from LOS 21 to LOS 22.1
           cat <<EOF > crave.yaml
-          project: LOS 21
+          project: LOS 22.1
           EOF
           
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-      - name: Start Runner via Build Command
+      - name: Start Runner
         run: |
-          # Using 'run' instead of 'devspace' to avoid socket discovery errors
-          crave run --no-patch -- " \
+          # Using 'run' with the project flag to match your dashboard exactly
+          crave run --project "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
