@@ -14,17 +14,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # We are putting the credentials exactly where Crave asked for them
       - name: Setup Credentials
         run: |
           cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
-            "crave_token": "${{ secrets.CRAVE_TOKEN }}"
+            "crave_token": "${{ secrets.CRAVE_TOKEN }}",
+            "crave_host": "https://foss.crave.io"
           }
           EOF
           
-          # MATCHING YOUR DASHBOARD: Switching from LOS 21 to LOS 22.1
+          # Mapping to LOS 22.1 as seen on your dashboard
           cat <<EOF > crave.yaml
           project: LOS 22.1
           EOF
@@ -34,8 +34,8 @@ jobs:
 
       - name: Start Runner
         run: |
-          # Using 'run' with the project flag to match your dashboard exactly
-          crave run --project "LOS 22.1" --no-patch -- " \
+          # -p "LOS 22.1" ensures we hit the correct project bucket
+          crave run -p "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
