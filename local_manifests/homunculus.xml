@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <!-- 1. The Device Trees (Pixel 7a 'Lynx' & Tensor G2) -->
+    <project path="device/google/lynx" name="LineageOS/android_device_google_lynx" remote="github" />
+    <project path="device/google/gs201" name="LineageOS/android_device_google_gs201" remote="github" />
+    <project path="device/google/gs201-sepolicy" name="LineageOS/android_device_google_gs201-sepolicy" remote="github" />
+
+    <!-- 2. The Hardware Interface (CPU/RAM communication) -->
+    <project path="hardware/google/pixel" name="LineageOS/android_hardware_google_pixel" remote="github" />
+    <project path="hardware/google/gchips" name="LineageOS/android_hardware_google_gchips" remote="github" />
+
+    <!-- 3. The Vendor Blobs (Camera, Wi-Fi, and Modem drivers) -->
+    <project path="vendor/google/lynx" name="TheMuppets/proprietary_vendor_google_lynx" remote="github" />
+    <project path="vendor/google/gs201" name="TheMuppets/proprietary_vendor_google_gs201" remote="github" />
+
+    <!-- 4. The Homunculus DNA (Your Ultraviolet UI and Injection Script) -->
+    <!-- !!! CHANGE 'YourGitHubUsername' TO YOUR ACTUAL GITHUB NAME !!! -->
+    <project path="vendor/homunculus/assets" name="HomunculusOS-OroborosMods/homunculus_assets" remote="github" revision="main" />
+</manifest>
