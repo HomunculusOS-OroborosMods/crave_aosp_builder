@@ -16,7 +16,7 @@ jobs:
 
       - name: Build the Crave Map Manually
         run: |
-          # 1. Credentials
+          # 1. Credentials in Home
           cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
@@ -24,19 +24,23 @@ jobs:
           }
           EOF
           
-          # 2. Hardcoded Project Binding
+          # 2. DELETE existing configs I saw in your screenshots to prevent conflicts
+          rm -rf configs/crave
+          rm -f crave.conf.sample
+          
+          # 3. Create the fresh project map at the root
           cat <<EOF > crave.yaml
           project: LOS 21
           EOF
           
-          # 3. Setup Crave
+          # 4. Download Crave
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
       - name: Force Boot Devspace
         run: |
-          # We use the 'devspace' command with an explicit project flag to force a socket connection
-          crave devspace --project "LOS 21" -- " \
+          # We use -p to force the project ID into the devspace request
+          crave devspace -p "LOS 21" -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
