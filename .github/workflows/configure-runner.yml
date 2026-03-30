@@ -8,14 +8,15 @@ on:
         required: true
 
 jobs:
-  run-as-job:
+  diagnose-and-run:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Credentials
+      - name: Setup and Diagnose
         run: |
+          # 1. Setup credentials with the FOSS host
           cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
@@ -24,18 +25,23 @@ jobs:
           }
           EOF
           
-          # Mapping to LOS 22.1 as seen on your dashboard
-          cat <<EOF > crave.yaml
-          project: LOS 22.1
-          EOF
-          
+          # 2. Install the Crave tool
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
+          
+          # 3. DIAGNOSTIC: List all projects available to your account
+          echo "--- AVAILABLE PROJECTS ---"
+          crave list projects
+          echo "--------------------------"
 
-      - name: Start Runner
+      - name: Attempt Runner
         run: |
-          # -p "LOS 22.1" ensures we hit the correct project bucket
-          crave run -p "LOS 22.1" --no-patch -- " \
+          # We'll try project "lineage" as it's a common catch-all on FOSS
+          cat <<EOF > crave.yaml
+          project: lineage
+          EOF
+          
+          crave run --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
