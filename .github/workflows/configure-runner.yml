@@ -14,22 +14,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up environment
+      - name: Build the Crave Map Manually
         run: |
-          mkdir -p ~/.config/crave
-          cat <<EOF > ~/.config/crave/crave.conf
+          # 1. Put the keys exactly where Crave wants them
+          cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
             "crave_token": "${{ secrets.CRAVE_TOKEN }}"
           }
           EOF
+          
+          # 2. Bypass the CLI and hardcode the map file
+          cat <<EOF > crave.yaml
+          https://github.com/${{ github.repository }}:
+            LOS 21:
+              ignoreClientHostname: true
+          EOF
+          
+          # 3. Download the Crave tool
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-      - name: Configure the 'crave' environment
-        run: crave config set project LOS 21
-
-      - name: Run crave devspace
+      - name: Boot the 64-Core Devspace
         run: |
           crave devspace -- " \
             rm -rf actions-runner || true && \
