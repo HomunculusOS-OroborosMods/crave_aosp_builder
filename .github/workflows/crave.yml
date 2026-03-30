@@ -2,10 +2,6 @@ name: Standard Crave Builder
 on:
   workflow_dispatch:
     inputs:
-      base_project:
-        description: 'Base Project'
-        required: true
-        default: 'LineageOS 21.0'
       manifest_url:
         description: 'Personal local manifest URL'
         required: true
@@ -39,7 +35,7 @@ jobs:
 
       - name: Set up Crave Environment
         run: |
-          # 1. Credentials in the exact right folder so Crave authenticates
+          # 1. Credentials in the exact right folder
           cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
@@ -47,13 +43,13 @@ jobs:
           }
           EOF
           
-          # 2. Map your custom repository directly to LineageOS 21.0 so Crave knows where to connect
+          # 2. Map your custom repository directly to the hardcoded LOS 21
           cat <<EOF > crave.yaml
           https://github.com/${{ github.repository }}:
-            ${{ github.event.inputs.base_project }}:
+            LOS 21:
               ignoreClientHostname: true
           github.com/${{ github.repository }}:
-            ${{ github.event.inputs.base_project }}:
+            LOS 21:
               ignoreClientHostname: true
           EOF
           
