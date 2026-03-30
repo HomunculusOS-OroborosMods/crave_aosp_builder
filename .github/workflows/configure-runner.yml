@@ -20,24 +20,14 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-          # 2. Official API Configuration
-          # We use the direct API host for FOSS to avoid the 301 redirect loop
-          crave config set host foss.crave.io
-          crave config set username "${{ secrets.CRAVE_USERNAME }}"
-          crave config set token "${{ secrets.CRAVE_TOKEN }}"
-
-          # 3. Create the mapping file
-          # Locked to your active dashboard project
-          cat <<EOF > crave.yaml
-          project: "LOS 22.1"
-          EOF
-
-          # 4. Verification
-          echo "Testing API handshake..."
-          crave list projects || echo "Handshake failed. Double-check your CRAVE_TOKEN!"
-
-          # 5. Fire the runner setup
-          crave run --no-patch -- " \
+          # 2. Direct Config Write
+          # This ensures the config is exactly where the tool expects it
+          mkdir -p ~/.config/crave
+          echo '{"crave_username": "${{ secrets.CRAVE_USERNAME }}", "crave_token": "${{ secrets.CRAVE_TOKEN }}", "crave_host": "https://foss.crave.io"}' > ~/.config/crave/crave.conf
+          
+          # 3. Fire the runner using the --project flag (Highest Priority)
+          # This bypasses the URL auto-discovery entirely
+          crave run --project "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
