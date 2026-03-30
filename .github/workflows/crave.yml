@@ -2,10 +2,6 @@ name: Standard Crave Builder
 on:
   workflow_dispatch:
     inputs:
-      base_project:
-        description: 'Base Project'
-        required: true
-        default: 'LineageOS 21.0'
       manifest_url:
         description: 'Personal local manifest URL'
         required: true
@@ -49,14 +45,15 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
           
-          # 1. Feed Crave the Git Identity it is crying about
+          # 1. Feed Crave the Git Identity
           git config --global user.name "HomunculusOS Builder"
           git config --global user.email "faucett.exogen@gmail.com"
           
-          # 2. Feed Crave the Project Map so it binds correctly
+          # 2. Feed Crave the exact URL map to LOS 21
           cat <<EOF > crave.yaml
-          ${{ github.event.inputs.base_project }}:
-            ignoreClientHostname: true
+          github.com/${{ github.repository }}:
+            LOS 21:
+              ignoreClientHostname: true
           EOF
 
       - name: Execute Crave Build Queue
