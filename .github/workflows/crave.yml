@@ -48,7 +48,16 @@ jobs:
           EOF
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
-          crave -v
+          
+          # 1. Feed Crave the Git Identity it is crying about
+          git config --global user.name "HomunculusOS Builder"
+          git config --global user.email "faucett.exogen@gmail.com"
+          
+          # 2. Feed Crave the Project Map so it binds correctly
+          cat <<EOF > crave.yaml
+          ${{ github.event.inputs.base_project }}:
+            ignoreClientHostname: true
+          EOF
 
       - name: Execute Crave Build Queue
         run: |
