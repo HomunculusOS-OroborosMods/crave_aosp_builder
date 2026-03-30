@@ -49,9 +49,9 @@ jobs:
           git config --global user.name "HomunculusOS Builder"
           git config --global user.email "faucett.exogen@gmail.com"
           
-          # 2. Feed Crave the exact URL map to LOS 21
+          # 2. Feed Crave the EXACT URL map string it is looking for
           cat <<EOF > crave.yaml
-          github.com/${{ github.repository }}:
+          https://github.com/${{ github.repository }}:
             LOS 21:
               ignoreClientHostname: true
           EOF
