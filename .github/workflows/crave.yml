@@ -45,16 +45,18 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
           
-          # Feed Crave the Git Identity
+          # Set the Git Identity
           git config --global user.name "HomunculusOS Builder"
           git config --global user.email "faucett.exogen@gmail.com"
+          
+          # Create the exact project map Crave needs
+          cat <<EOF > crave.yaml
+          LOS 21:
+            ignoreClientHostname: true
+          EOF
 
       - name: Execute Crave Build Queue
         run: |
-          # 1. THE SPOOF: Forcibly overwrite the origin URL to a Crave-whitelisted project
-          git remote set-url origin https://github.com/sounddrill31/crave_aosp_builder
-          
-          # 2. Fire the forge with the forged ID badge
           crave run --no-patch -- " \
           rm -rf .repo/local_manifests && \
           repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs && \
