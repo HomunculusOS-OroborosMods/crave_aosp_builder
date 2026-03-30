@@ -10,6 +10,11 @@ on:
 jobs:
   setup-and-run:
     runs-on: ubuntu-latest
+    # We are forcing the credentials into the environment for the entire job
+    env:
+      CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
+      CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
+      CRAVE_HOST: foss.crave.io
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,30 +25,30 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-          # 2. Setup Credentials in the official folder
+          # 2. Setup Credentials in TWO places to be safe
           mkdir -p ~/.config/crave
           cat <<EOF > ~/.config/crave/crave.conf
           {
-            "crave_username": "${{ secrets.CRAVE_USERNAME }}",
-            "crave_token": "${{ secrets.CRAVE_TOKEN }}",
+            "crave_username": "$CRAVE_USERNAME",
+            "crave_token": "$CRAVE_TOKEN",
             "crave_host": "https://foss.crave.io"
           }
           EOF
-          # Backup location just in case
           cp ~/.config/crave/crave.conf ~/crave.conf
 
-          # 3. Create crave.yaml mapping IMMEDIATELY
-          # This tells Crave to stop looking at your URL and just use the LOS 22.1 room
+          # 3. Create crave.yaml mapping
+          # We'll try the project name exactly as it appears on your dashboard
           cat <<EOF > crave.yaml
           project: "LOS 22.1"
           EOF
 
-          # 4. Diagnostic: Check if it sees your projects now
-          echo "Verifying project access..."
-          crave list projects
+          # 4. VERIFICATION: Test the connection before we try to run
+          echo "Testing API connection..."
+          crave list projects || echo "LIST FAILED: Check your CRAVE_TOKEN in GitHub Secrets!"
 
           # 5. Fire the runner setup
-          crave run --no-patch -- " \
+          # We use the -p flag to force the project name one more time
+          crave run -p "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
