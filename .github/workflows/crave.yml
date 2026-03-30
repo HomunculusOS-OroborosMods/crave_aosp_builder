@@ -1,0 +1,63 @@
+name: Standard Crave Builder
+on:
+  workflow_dispatch:
+    inputs:
+      base_project:
+        description: 'Base Project'
+        required: true
+        default: 'LineageOS 21.0'
+      manifest_url:
+        description: 'Personal local manifest URL'
+        required: true
+      manifest_branch:
+        description: 'Branch for local manifest'
+        required: true
+        default: 'main'
+      device_codename:
+        description: 'Device codename'
+        required: true
+        default: 'lynx'
+      build_target:
+        description: 'Build target'
+        required: true
+        default: 'lineage_lynx'
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'userdebug'
+      build_command:
+        description: 'Build command'
+        required: true
+        default: 'bash vendor/homunculus/assets/inject_homunculus.sh && mka bacon'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Crave Environment
+        run: |
+          mkdir -p ~/.config/crave
+          cat <<EOF > ~/.config/crave/crave.conf
+          {
+            "crave_username": "${{ secrets.CRAVE_USERNAME }}",
+            "crave_token": "${{ secrets.CRAVE_TOKEN }}"
+          }
+          EOF
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          sudo mv crave /usr/local/bin/
+          crave -v
+
+      - name: Execute Crave Build Queue
+        run: |
+          crave run --no-patch -- " \
+          rm -rf .repo/local_manifests && \
+          repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs && \
+          git clone -b ${{ github.event.inputs.manifest_branch }} ${{ github.event.inputs.manifest_url }} .repo/local_manifests && \
+          repo sync -c -j8 --force-sync --no-clone-bundle --no-tags && \
+          source build/envsetup.sh && \
+          lunch ${{ github.event.inputs.build_target }}-${{ github.event.inputs.build_type }} && \
+          ${{ github.event.inputs.build_command }} \
+          "
