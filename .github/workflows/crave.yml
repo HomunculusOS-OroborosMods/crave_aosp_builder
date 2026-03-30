@@ -2,6 +2,10 @@ name: Standard Crave Builder
 on:
   workflow_dispatch:
     inputs:
+      base_project:
+        description: 'Base Project'
+        required: true
+        default: 'LineageOS 21.0'
       manifest_url:
         description: 'Personal local manifest URL'
         required: true
@@ -33,9 +37,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Crave
+      - name: Set up Crave Environment
         run: |
-          # 1. Put the config file exactly where Crave is looking for it
+          # 1. Credentials in the exact right folder so Crave authenticates
           cat <<EOF > ~/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
@@ -43,17 +47,25 @@ jobs:
           }
           EOF
           
-          # 2. Tell Crave which project base we are using
+          # 2. Map your custom repository directly to LineageOS 21.0 so Crave knows where to connect
           cat <<EOF > crave.yaml
-          LOS 21:
-            ignoreClientHostname: true
+          https://github.com/${{ github.repository }}:
+            ${{ github.event.inputs.base_project }}:
+              ignoreClientHostname: true
+          github.com/${{ github.repository }}:
+            ${{ github.event.inputs.base_project }}:
+              ignoreClientHostname: true
           EOF
           
-          # 3. Download the Crave software
+          # 3. Download Crave
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
+          
+          # 4. Set the Git Identity
+          git config --global user.name "HomunculusOS Builder"
+          git config --global user.email "faucett.exogen@gmail.com"
 
-      - name: Build Homunculus
+      - name: Execute Crave Build Queue
         run: |
           crave run --no-patch -- " \
           rm -rf .repo/local_manifests && \
