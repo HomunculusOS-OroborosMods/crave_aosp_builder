@@ -20,26 +20,26 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-          # 2. Write config to EVERY possible spot to bypass the "Not Found" error
+          # 2. API-Direct Configuration
+          # Removing 'https://' from the host often bypasses the 301 redirect loop
           mkdir -p ~/.config/crave
-          cat <<EOF > ./crave.conf
+          cat <<EOF > ~/.config/crave/crave.conf
           {
             "crave_username": "${{ secrets.CRAVE_USERNAME }}",
             "crave_token": "${{ secrets.CRAVE_TOKEN }}",
-            "crave_host": "https://foss.crave.io"
+            "crave_host": "foss.crave.io"
           }
           EOF
-          cp ./crave.conf ~/.config/crave/crave.conf
-          cp ./crave.conf ~/crave.conf
-
-          # 3. Create crave.yaml mapping
+          
+          # 3. Project Mapping
+          # We'll use the name 'los22' as an internal-style fallback
           cat <<EOF > crave.yaml
           project: "LOS 22.1"
           EOF
 
-          # 4. Fire the runner using the EXPLICIT config flag
-          # This forces the tool to stop looking for other files
-          crave --config ./crave.conf run --project "LOS 22.1" --no-patch -- " \
+          # 4. Fire the runner
+          # We use -p to ensure the project matches your dashboard exactly
+          crave run -p "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
