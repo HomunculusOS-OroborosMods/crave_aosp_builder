@@ -10,11 +10,6 @@ on:
 jobs:
   setup-and-run:
     runs-on: ubuntu-latest
-    # We bake the credentials into the environment here
-    env:
-      CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
-      CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
-      CRAVE_HOST: https://foss.crave.io
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,16 +20,26 @@ jobs:
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           sudo mv crave /usr/local/bin/
 
-          # 2. Safety Check: Verify variables are reaching the shell
-          # (GitHub will mask these with ***, but we need to see if they exist)
-          if [ -z "$CRAVE_TOKEN" ]; then
-            echo "ERROR: CRAVE_TOKEN is empty. Check your GitHub Secrets!"
-            exit 1
-          fi
+          # 2. Write config to EVERY possible spot to bypass the "Not Found" error
+          mkdir -p ~/.config/crave
+          cat <<EOF > ./crave.conf
+          {
+            "crave_username": "${{ secrets.CRAVE_USERNAME }}",
+            "crave_token": "${{ secrets.CRAVE_TOKEN }}",
+            "crave_host": "https://foss.crave.io"
+          }
+          EOF
+          cp ./crave.conf ~/.config/crave/crave.conf
+          cp ./crave.conf ~/crave.conf
 
-          # 3. Fire the runner setup
-          # We use the -p flag to force the project name LOS 22.1
-          crave run --project "LOS 22.1" --no-patch -- " \
+          # 3. Create crave.yaml mapping
+          cat <<EOF > crave.yaml
+          project: "LOS 22.1"
+          EOF
+
+          # 4. Fire the runner using the EXPLICIT config flag
+          # This forces the tool to stop looking for other files
+          crave --config ./crave.conf run --project "LOS 22.1" --no-patch -- " \
             rm -rf actions-runner || true && \
             mkdir actions-runner && \
             cd actions-runner && \
